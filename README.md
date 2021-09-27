@@ -97,7 +97,7 @@ class UserView(SchemaMixin, MethodView):
 
   def patch(self, user_id: int):
     # This is a bit unsafe, but its just for demo purposes
-    UserModel.query.filter(UserModel.user_id).update(**self.get_validated_data())
+    UserModel.query.filter(UserModel.id == user_id).update(**self.get_validated_data())
     db.session.commit()
     return None, 204
 
@@ -190,13 +190,69 @@ class Authenticated(BasePermission):
 ```
 
 ## StatusCodeMixin
-...
+A simple mixin that allows the status code to be omitted from return value of the view, and instead has it inferred from the response content and the http method.
+```
+class UserView(StatusCodeMixin, MethodView):
+  def get(self):
+    return UserModel.query.all()  # The 200 status code is inferred
+```
 
 ## JsonifyMixin
-...
+A simple mixin that converts the response object into a json response using `flask.jsonify`, it expects a dict in the response, so if used in conjunction with the SchemaMixin or the StatusCodeMixin, it would be to be the left-most parent (`UserView(JsonifyMixin, StatusCodeMixin, SchemaMixin, MethodView)`).
+```
+class UserView(JsonifyMixin, MethodView):
+  def get(self):
+    return {"name": "Tony"}, 200
+```
 
 ## ResourceMixin
-...
+This is a combination of all of the above mixins, it allows fined tuned views, and assumes that the response is only returning 1 item in the GET cases, so it is best to be used when referring to a single resource, so an endpoint that has `GET/PATCH/DELETE /resource/<resource_id>`.
+```
+class UserView(ResourceView):
+  schema = UserSchema
+  permissions = (Authenticated,)
+
+  def get(self, user_id):
+    return User.query.get(user_id)  # Implicit 200
+
+  def get_patch_schema_class(self):
+    # A schema that performs a partial validation, unlike the schema used in creation
+    return PatchUserSchema
+
+  def patch(self, user_id):
+    User.query.filter(User.id == user_id).update(**self.get_validated_data())
+    db.session.commit()
+    return None  # Implicit 204
+
+  def get_delete_permissions(self):
+    return (Authenticated, IsSuperuser)
+
+  def delete(self, user_id):
+    User.query.get(user_id).delete()
+    db.session.commit()
+    return None  # Implicit 204
+```
 
 ## ResourcesMixin
-...
+This is a combination of all of the above mixins, it allows fined tuned views, and assumes that the response is returning multiple items in the GET cases, so it is best to be used when referring to a non-specific resource, so an endpoint that has `POST/GET /resource>`.
+```
+class UserView(ResourcesView):
+  schema = UserSchema
+  permissions = (Authenticated,)
+  filter_schema = UserFilterSchema
+
+  def get_write_permissions(self):
+    return (Authenticated, IsSuperuser)
+
+  def post(self):
+    # Only superusers here
+    user = User(**self.get_validated_data())
+    db.session.add(user)
+    db.session.commit()
+    return user  # Implicit 201
+
+  def get(self):
+    # Any authenticated user here
+    return User.query.filter(**self.get_filter_data())  # Implicit 200
+```
+If your response is paginated, its best to use the `ResourceSchema` with and treat the paginated object as a single item with its own schema (that would have the nested results)
