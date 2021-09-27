@@ -17,7 +17,7 @@ What the SchemaMixin does allow is:
 
 3) The `dispatch_request` is overridden so that if a non-dictionary object is returned, the object will be dumped using the provided schema, again with multiple options for overriding methods to make the schema dynamic.
 
-![SchemaMixin dispatch request](./docs/diagrams/schemas-mixin-dispatch.png)
+![SchemaMixin dispatch request](./docs/diagrams/schema-mixins-dispatch.png)
 
 ...
 
