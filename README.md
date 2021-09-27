@@ -19,6 +19,30 @@ What the SchemaMixin does allow is:
 
 ![SchemaMixin dispatch request](./docs/diagrams/schema-mixins-dispatch.png)
 
+
+### Examples
+#### Example using Marshmallow and Flask-sqlalchemy
+```
+from flask.views import MethodView
+from flask_view_mixins import SchemaMixin
+from marshmallow import Schema, fields
+
+# Your model defined somewhere
+from mymodels import UserModel
+
+class UserSchema(Schema):
+  name = fields.String()
+  age = fields.Int()
+
+class UserView(SchemaMixin, MethodView):
+  schema = UserSchema
+
+  def post(self):
+    user = UserModel(**self.get_validated_data())
+    db.session.add(user)
+    db.session.commit()
+    return user, 201
+```
 ...
 
 ## PermissionMixin
