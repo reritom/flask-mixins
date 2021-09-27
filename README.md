@@ -108,10 +108,86 @@ class UserView(SchemaMixin, MethodView):
     users = UserModel.query.filter_by(**self.get_filter_data())
     return users, 200
 ```
-...
 
 ## PermissionMixin
-...
+The `PermissionMixin` allows permission checks to be performed prior before dispatching the request. The tools for handling the permissions themselves are agnostic, but should likely rely on `request.view_args` and `g`. For the given list of the permissions, each permission will be called, and the permission should raise a `PermissionError` if it fails, and raise/return nothing if it passes.
+
+Methods can be overridden again based to allow more dynamic permissions.
+
+![PermissionMixin functions](./docs/diagrams/permissions-mixins.png)
+
+### Examples
+#### Example with simple permissions
+```
+from flask import g
+
+
+class Authenticated():
+  """Permission class that assumes a middleware has attached an authenticated user"""
+  @staticmethod
+  def has_permission():
+    if not g.user:
+        raise PermissionError("Authenticated user required")
+
+
+class UserView(PermissionMixin, MethodView):
+  permissions = (Authenticated, )
+
+  def post(self):
+    ...
+
+```
+
+#### Example with overridden permissions
+```
+from flask import g
+from mypermissions import Authenticated, IsSuperuser
+
+class UserView(PermissionMixin, MethodView):
+  permissions = (Authenticated, )
+
+  def get_post_permissions(self):
+    # Checking both is redundant, but allows for more granular error messages
+    return (Authenticated, IsSuperuser)
+
+  def post(self):
+    # Only superusers can get here
+    ...
+
+  def get(self):
+    # Any authenticated user can get here
+    ...
+
+```
+
+#### Example permission implementation
+The permission classes require a protocol of:
+```
+class Permission:
+  def has_permission(self) -> None:
+    # Maybe raise a PermissionError
+    ...
+```
+So one implementation of this could be to have a base permission like:
+```
+class BasePermission:
+  error_message = NotImplementedError
+
+  def has_permission(self):
+    if not self.check():
+      raise PermissionError(self.error_message)
+
+  def check(self) -> bool:
+    raise NotImplementedError
+```
+That can have child permissions defined as:
+```
+class Authenticated(BasePermission):
+  error_message = "User is not authenticated"
+
+  def check(self) -> bool:
+    return g.user is not None
+```
 
 ## StatusCodeMixin
 ...
