@@ -255,4 +255,4 @@ class UserView(ResourcesView):
     # Any authenticated user here
     return User.query.filter(**self.get_filter_data())  # Implicit 200
 ```
-If your response is paginated, its best to use the `ResourceSchema` with and treat the paginated object as a single item with its own schema (that would have the nested results)
+If your response is paginated, its best to use the `ResourceSchema` and treat the paginated object as a single item with its own schema (that would have the nested results)
