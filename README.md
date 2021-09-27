@@ -125,7 +125,7 @@ from flask import g
 class Authenticated():
   """Permission class that assumes a middleware has attached an authenticated user"""
   @staticmethod
-  def has_permission():
+  def check_permission():
     if not g.user:
         raise PermissionError("Authenticated user required")
 
@@ -164,7 +164,7 @@ class UserView(PermissionMixin, MethodView):
 The permission classes require a protocol of:
 ```
 class Permission:
-  def has_permission(self) -> None:
+  def check_permission(self) -> None:
     # Maybe raise a PermissionError
     ...
 ```
@@ -173,11 +173,11 @@ So one implementation of this could be to have a base permission like:
 class BasePermission:
   error_message = NotImplementedError
 
-  def has_permission(self):
-    if not self.check():
+  def check_permission(self):
+    if not self.has_permission():
       raise PermissionError(self.error_message)
 
-  def check(self) -> bool:
+  def has_permission(self) -> bool:
     raise NotImplementedError
 ```
 That can have child permissions defined as:
@@ -185,8 +185,35 @@ That can have child permissions defined as:
 class Authenticated(BasePermission):
   error_message = "User is not authenticated"
 
-  def check(self) -> bool:
+  def has_permission(self) -> bool:
     return g.user is not None
+```
+## ServicesMixin
+The above examples have shown the views directly interacting with the database objects and performing the CRUD and business logic. Ideally though, that logic would be decoupled from the web framework through a service layer. Another benefit is that by containing business logic in the service, one can have services that consume other services, which can't easily be done when the logic exists in the view.
+
+The `ServiceMixin` is a simple mixin that allows you to define a `service` for the view and to call it with a `ServiceContext`. The service implementation is agnostic, but this allows for one to make a mixin for their needs that can provide the service with the correct context for ones implementation.
+
+```
+class UserService:
+  def __init__(self, context):
+    # Some context, perhaps containing details about the authenticated user, permissions, etc
+    self.context = context
+
+  def create_user(self, name: str, age: int) -> User:
+    user = User(name=name, age=age)
+    db.session.add(user)
+    db.session.commit()
+    return user
+
+  ...
+
+class UserView(ServiceMixin, MethodView):
+  service = UserService
+
+  def post(self):
+    user = self.get_service().create_user(...)
+    return UserSchema().dumps(user), 201
+
 ```
 
 ## StatusCodeMixin
@@ -194,7 +221,8 @@ A simple mixin that allows the status code to be omitted from return value of th
 ```
 class UserView(StatusCodeMixin, MethodView):
   def get(self):
-    return UserModel.query.all()  # The 200 status code is inferred
+    users = UserModel.query.all()
+    return UserSchema(many=True).dumps(users)  # The 200 status code is inferred
 ```
 
 ## JsonifyMixin
@@ -213,24 +241,20 @@ class UserView(ResourceView):
   permissions = (Authenticated,)
 
   def get(self, user_id):
-    return User.query.get(user_id)  # Implicit 200
+    return self.get_service().get_user(user_id)  # Implicit 200
 
   def get_patch_schema_class(self):
     # A schema that performs a partial validation, unlike the schema used in creation
     return PatchUserSchema
 
   def patch(self, user_id):
-    User.query.filter(User.id == user_id).update(**self.get_validated_data())
-    db.session.commit()
-    return None  # Implicit 204
+    return self.get_service().update_user(user_id, **self.get_validated_data())  # Implicit 204
 
   def get_delete_permissions(self):
     return (Authenticated, IsSuperuser)
 
-  def delete(self, user_id):
-    User.query.get(user_id).delete()
-    db.session.commit()
-    return None  # Implicit 204
+  def delete(self, user_id) -> None:
+    return self.get_service().delete_user(user_id)  # Implicit 204
 ```
 
 ## ResourcesMixin
@@ -238,6 +262,7 @@ This is a combination of all of the above mixins, it allows fined tuned views, a
 ```
 class UserView(ResourcesView):
   schema = UserSchema
+  service = UserService
   permissions = (Authenticated,)
   filter_schema = UserFilterSchema
 
@@ -246,13 +271,10 @@ class UserView(ResourcesView):
 
   def post(self):
     # Only superusers here
-    user = User(**self.get_validated_data())
-    db.session.add(user)
-    db.session.commit()
-    return user  # Implicit 201
+    return self.get_service().create_user(**self.get_validated_data())  # Implicit 201
 
   def get(self):
     # Any authenticated user here
-    return User.query.filter(**self.get_filter_data())  # Implicit 200
+    return self.get_service().get_users(**self.get_filter_data())  # Implicit 200
 ```
 If your response is paginated, its best to use the `ResourceSchema` and treat the paginated object as a single item with its own schema (that would have the nested results)
