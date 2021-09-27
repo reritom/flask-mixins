@@ -22,7 +22,7 @@ What the SchemaMixin does allow is:
 
 ### Examples
 #### Example using Marshmallow and Flask-sqlalchemy
-```
+```python
 from flask.views import MethodView
 from flask_view_mixins import SchemaMixin
 from marshmallow import Schema, fields
@@ -44,7 +44,7 @@ class UserView(SchemaMixin, MethodView):
     return user, 201
 ```
 #### Example of a filter and options override
-```
+```python
 from flask.views import MethodView
 from flask_view_mixins import SchemaMixin
 
@@ -63,7 +63,7 @@ class UserView(SchemaMixin, MethodView):
     return users, 200
 ```
 #### Example with more overrides (the different schemas may perform different validation logic because in the update case, and instance already exists)
-```
+```python
 from flask.views import MethodView
 from flask_view_mixins import SchemaMixin
 from flask import request
@@ -118,7 +118,7 @@ Methods can be overridden again based to allow more dynamic permissions.
 
 ### Examples
 #### Example with simple permissions
-```
+```python
 from flask import g
 
 
@@ -139,7 +139,7 @@ class UserView(PermissionMixin, MethodView):
 ```
 
 #### Example with overridden permissions
-```
+```python
 from flask import g
 from mypermissions import Authenticated, IsSuperuser
 
@@ -157,19 +157,19 @@ class UserView(PermissionMixin, MethodView):
   def get(self):
     # Any authenticated user can get here
     ...
-
 ```
 
 #### Example permission implementation
 The permission classes require a protocol of:
-```
+```python
 class Permission:
   def check_permission(self) -> None:
     # Maybe raise a PermissionError
     ...
 ```
+
 So one implementation of this could be to have a base permission like:
-```
+```python
 class BasePermission:
   error_message = NotImplementedError
 
@@ -180,20 +180,21 @@ class BasePermission:
   def has_permission(self) -> bool:
     raise NotImplementedError
 ```
+
 That can have child permissions defined as:
-```
+```python
 class Authenticated(BasePermission):
   error_message = "User is not authenticated"
 
   def has_permission(self) -> bool:
     return g.user is not None
 ```
+
 ## ServicesMixin
 The above examples have shown the views directly interacting with the database objects and performing the CRUD and business logic. Ideally though, that logic would be decoupled from the web framework through a service layer. Another benefit is that by containing business logic in the service, one can have services that consume other services, which can't easily be done when the logic exists in the view.
 
 The `ServiceMixin` is a simple mixin that allows you to define a `service` for the view and to call it with a `ServiceContext`. The service implementation is agnostic, but this allows for one to make a mixin for their needs that can provide the service with the correct context for ones implementation.
-
-```
+```python
 class UserService:
   def __init__(self, context):
     # Some context, perhaps containing details about the authenticated user, permissions, etc
@@ -213,12 +214,11 @@ class UserView(ServiceMixin, MethodView):
   def post(self):
     user = self.get_service().create_user(...)
     return UserSchema().dumps(user), 201
-
 ```
 
 ## StatusCodeMixin
 A simple mixin that allows the status code to be omitted from return value of the view, and instead has it inferred from the response content and the http method.
-```
+```python
 class UserView(StatusCodeMixin, MethodView):
   def get(self):
     users = UserModel.query.all()
@@ -227,7 +227,7 @@ class UserView(StatusCodeMixin, MethodView):
 
 ## JsonifyMixin
 A simple mixin that converts the response object into a json response using `flask.jsonify`, it expects a dict in the response, so if used in conjunction with the SchemaMixin or the StatusCodeMixin, it would be to be the left-most parent (`UserView(JsonifyMixin, StatusCodeMixin, SchemaMixin, MethodView)`).
-```
+```python
 class UserView(JsonifyMixin, MethodView):
   def get(self):
     return {"name": "Tony"}, 200
@@ -235,7 +235,7 @@ class UserView(JsonifyMixin, MethodView):
 
 ## ResourceMixin
 This is a combination of all of the above mixins, it allows fined tuned views, and assumes that the response is only returning 1 item in the GET cases, so it is best to be used when referring to a single resource, so an endpoint that has `GET/PATCH/DELETE /resource/<resource_id>`.
-```
+```python
 class UserView(ResourceView):
   schema = UserSchema
   permissions = (Authenticated,)
@@ -259,7 +259,7 @@ class UserView(ResourceView):
 
 ## ResourcesMixin
 This is a combination of all of the above mixins, it allows fined tuned views, and assumes that the response is returning multiple items in the GET cases, so it is best to be used when referring to a non-specific resource, so an endpoint that has `POST/GET /resource>`.
-```
+```python
 class UserView(ResourcesView):
   schema = UserSchema
   service = UserService
@@ -277,4 +277,5 @@ class UserView(ResourcesView):
     # Any authenticated user here
     return self.get_service().get_users(**self.get_filter_data())  # Implicit 200
 ```
+
 If your response is paginated, its best to use the `ResourceSchema` and treat the paginated object as a single item with its own schema (that would have the nested results)
