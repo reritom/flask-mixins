@@ -1,26 +1,25 @@
 from __future__ import annotations
 
-from typing import Any, Protocol, Type
+from typing import Any, Protocol
 
 
 class ServiceProtocol(Protocol):
-    def __init__(self, *args, **kwargs, context: Any):
+    def __init__(self, *args, context: Any, **kwargs):
         ...
 
 
 class ServiceMixin:
+    service = None
+
     def get_service_context(self, *args, **kwargs) -> Any:
         # Can be overridden
         return None
 
     def get_service(self, *args, **kwargs) -> Any:
         # Can be overridden
-        try:
-            service_class: Type[ServiceProtocol] = self.service
-        except AttributeError:
-            raise Exception(
-                "Unable to get service with no service class defined"
-            ) from None
+        if not self.service:
+            raise Exception("Unable to get service with no service class defined")
 
+        service_class: type[ServiceProtocol] = self.service
         context = self.get_service_context()
         return service_class(*args, **kwargs, context=context)

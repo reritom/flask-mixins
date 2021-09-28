@@ -1,45 +1,56 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, List, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 from flask import request
+
+if TYPE_CHECKING:
+    from flask.views import MethodView
+
+    _Base = MethodView
+else:
+    _Base = object
+
 
 def method():
     return request.method.lower()
 
 
 class PermissionProtocol(Protocol):
+    def __init__(self, *args, **kwargs):
+        ...
+
     def check_permission(self):
         """Check that the permission is satisfied"""
 
 
-class PermissionMixin:
-    def _get_permissions(self) -> List[PermissionProtocol]:
+class PermissionMixin(_Base):
+    def _get_permissions(self) -> list[type[PermissionProtocol]]:
         return getattr(self, "permissions", [])
 
-    def get_write_permissions(self) -> List[PermissionProtocol]:
+    def get_write_permissions(self) -> list[type[PermissionProtocol]]:
         return self._get_permissions()
 
-    def get_read_permissions(self) -> List[PermissionProtocol]:
+    def get_read_permissions(self) -> list[type[PermissionProtocol]]:
         return self._get_permissions()
 
-    def get_post_permissions(self) -> List[PermissionProtocol]:
+    def get_post_permissions(self) -> list[type[PermissionProtocol]]:
         return self.get_write_permissions()
 
-    def get_put_permissions(self) -> List[PermissionProtocol]:
+    def get_put_permissions(self) -> list[type[PermissionProtocol]]:
         return self.get_write_permissions()
 
-    def get_patch_permissions(self) -> List[PermissionProtocol]:
+    def get_patch_permissions(self) -> list[type[PermissionProtocol]]:
         return self.get_write_permissions()
 
-    def get_delete_permissions(self) -> List[PermissionProtocol]:
+    def get_delete_permissions(self) -> list[type[PermissionProtocol]]:
         return self.get_write_permissions()
 
-    def get_get_permissions(self) -> List[PermissionProtocol]:
+    def get_get_permissions(self) -> list[type[PermissionProtocol]]:
         return self.get_read_permissions()
 
-    def get_permissions(self) -> List[PermissionProtocol]:
-        if methind_ := getattr(self, f"get_{method()}_permissions", None):
+    def get_permissions(self) -> list[type[PermissionProtocol]]:
+        if method_ := getattr(self, f"get_{method()}_permissions", None):
             return method_()
         return self._get_permissions()
 

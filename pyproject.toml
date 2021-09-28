@@ -1,0 +1,8 @@
+[tool.black]
+line-length = 88
+target-version = ["py38"]
+
+[tool.unimport]
+remove = true
+diff = false
+include_star_import = true

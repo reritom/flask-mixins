@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from flask import request
+from flask.views import MethodView
+
 from .view_mixins import (
     JsonifyMixin,
     PermissionMixin,
@@ -7,7 +10,6 @@ from .view_mixins import (
     ServiceMixin,
     StatusCodeMixin,
 )
-from flask.views import MethodView
 
 
 class _BaseView(
