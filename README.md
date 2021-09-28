@@ -233,7 +233,7 @@ class UserView(JsonifyMixin, MethodView):
     return {"name": "Tony"}, 200
 ```
 
-## ResourceMixin
+## ResourceView
 This is a combination of all of the above mixins, it allows fined tuned views, and assumes that the response is only returning 1 item in the GET cases, so it is best to be used when referring to a single resource, so an endpoint that has `GET/PATCH/DELETE /resource/<resource_id>`.
 ```python
 class UserView(ResourceView):
@@ -257,7 +257,7 @@ class UserView(ResourceView):
     return self.get_service().delete_user(user_id)  # Implicit 204
 ```
 
-## ResourcesMixin
+## ResourcesView
 This is a combination of all of the above mixins, it allows fined tuned views, and assumes that the response is returning multiple items in the GET cases, so it is best to be used when referring to a non-specific resource, so an endpoint that has `POST/GET /resource>`.
 ```python
 class UserView(ResourcesView):
