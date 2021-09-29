@@ -22,7 +22,7 @@ class _FilterSchemaMixin:
     def get_filter_schema_class(self) -> type[Schema]:
         # Can be overridden
         if not self.filter_schema:
-            raise Exception("No filter schema defined for the class")
+            raise RuntimeError("No filter schema defined for the class")
 
         return self.filter_schema
 
@@ -55,7 +55,7 @@ class _ResponseSchemaMixin(_Base):
             return schema
 
         if not self.schema:
-            raise Exception("No response schema defined in the class")
+            raise RuntimeError("No response schema defined in the class")
 
         return self.schema
 
@@ -98,9 +98,11 @@ class _ResponseSchemaMixin(_Base):
 
         if not isinstance(response, dict):
             if should_be_single and isinstance(response, list):
-                raise Exception("View returned list, but expected an individual item")
+                raise RuntimeError(
+                    "View returned list, but expected an individual item"
+                )
             if should_be_many and not isinstance(response, list):
-                raise Exception("View returned non-list, but expected list")
+                raise RuntimeError("View returned non-list, but expected list")
 
             obj = schema.dump(response)
 
@@ -125,7 +127,7 @@ class _RequestSchemaMixin:
             return schema
 
         if not self.schema:
-            raise Exception("No request schema defined in the class")
+            raise RuntimeError("No request schema defined in the class")
 
         return self.schema
 
