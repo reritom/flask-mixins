@@ -8,6 +8,7 @@ local.db
 .pytest_cache/
 __pycache__/
 
+.DSStore
 # C extensions
 *.so
 

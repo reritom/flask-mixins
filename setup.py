@@ -10,9 +10,9 @@ def read(fname):
 
 
 EXTRAS_REQUIRE = {}
-EXTRAS_REQUIRE["tests"] = read("requirements/test.requirements.txt")
-EXTRAS_REQUIRE["dev"] = read("requirements/dev.requirements.txt")
-REQUIRES = read("requirements/requirements.txt")
+# EXTRAS_REQUIRE["tests"] = read("requirements/test.requirements.txt").splitlines()
+# EXTRAS_REQUIRE["dev"] = read("requirements/dev.requirements.txt").splitlines()
+REQUIRES = read("requirements/requirements.txt").splitlines()
 
 
 def find_version(fname):

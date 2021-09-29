@@ -1,0 +1,3 @@
+-r requirements.txt
+marshmallow==3.13.0
+mypy==0.910
