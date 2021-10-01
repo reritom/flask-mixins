@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING, Any
 
 from flask import request
 
+from ._utils import method
+
 if TYPE_CHECKING:
     from marshmallow import Schema
 
@@ -215,8 +217,7 @@ class _RequestSchemaMixin:
         )
 
     def _get_request_schema_instance(self) -> Schema:
-        method = request.method.lower()
-        if method_ := getattr(self, f"get_{method}_schema_instance", None):
+        if method_ := getattr(self, f"get_{method()}_schema_instance", None):
             return method_()
         return self.get_request_schema_instance()
 

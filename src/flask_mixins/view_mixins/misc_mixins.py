@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from flask import jsonify, request
+from flask import jsonify
+
+from ._utils import method
 
 if TYPE_CHECKING:
     from flask.views import MethodView
@@ -37,8 +39,7 @@ class StatusCodeMixin(_Base):
         """
         If the response has no status code, supplement it
         """
-        method = request.method.lower()
-        status = 201 if method == "post" else 200
+        status = 201 if method() == "post" else 200
         response = super().dispatch_request(*args, **kwargs)
 
         if not isinstance(response, tuple):
