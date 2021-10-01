@@ -54,10 +54,6 @@ class DeleteOK(_OKPermission):
     pass
 
 
-class View(PermissionMixin, MethodView):
-    permissions = (ViewOK,)
-
-
 @pytest.mark.parametrize(
     "method,method_permissions,general_method,general_method_permissions,expected_permissions",  # noqa
     [
@@ -94,7 +90,7 @@ def test_get_permissions_override_specific_and_general_permissions(
     general_method_permissions,
     expected_permissions,
 ):
-    _dict = {}
+    _dict = {"permissions": (ViewOK,)}
     if general_method_permissions is not NO_OP:
         _dict[
             f"get_{general_method}_permissions"
@@ -105,7 +101,7 @@ def test_get_permissions_override_specific_and_general_permissions(
     SubTestView = type(
         "SubTestView",
         (
-            View,
+            PermissionMixin,
             MethodView,
         ),
         _dict,
