@@ -37,6 +37,7 @@ setup(
     version=find_version("src/flask_mixins/__init__.py"),
     description="Flask and marshmallow cleaner code",
     author="Tomas Sheers",
+    long_description="Flask and marshmallow cleaner code",
     author_email="t.sheers@outlook.com",
     url="https://github.com/reritom/flask-mixins",
     packages=find_packages("src"),
