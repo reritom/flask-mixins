@@ -37,13 +37,15 @@ class JsonifyMixin(_Base):
 class StatusCodeMixin(_Base):
     def dispatch_request(self, *args, **kwargs):
         """
-        If the response has no status code, supplement it
+        If the response has no status code, supplement it.
+        If the response is None, 204 is returned, and an additional mixin is required
+        to handle the None response.
         """
         status = 201 if method() == "post" else 200
         response = super().dispatch_request(*args, **kwargs)
 
         if not isinstance(response, tuple):
             # Infer the status code
-            response = response, status if response else 204
+            response = (response, status if response is not None else 204)
 
         return response

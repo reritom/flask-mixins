@@ -1,7 +1,7 @@
 import pytest
 from flask.views import MethodView
 
-from flask_mixins import StatusCodeMixin
+from flask_mixins import JsonifyMixin, StatusCodeMixin
 
 
 def test_status_code_returns_unaffected(app):
@@ -14,14 +14,19 @@ def test_status_code_returns_unaffected(app):
     assert client.get("/").status_code == 201
 
 
-def test_status_code_204_if_none(app):
-    class Index(StatusCodeMixin, MethodView):
+@pytest.mark.parametrize(
+    ("response,expected_status_code"),
+    [({}, 200), ("", 200), (None, 204)],
+)
+def test_status_code_204_if_none(app, response, expected_status_code):
+    # JsonifyMixin is used to handle the None response
+    class Index(JsonifyMixin, StatusCodeMixin, MethodView):
         def get(self):
-            return {}
+            return response
 
     app.add_url_rule("/", view_func=Index.as_view("index"))
     client = app.test_client()
-    assert client.get("/").status_code == 204
+    assert client.get("/").status_code == expected_status_code
 
 
 @pytest.mark.parametrize(
