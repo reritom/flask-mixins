@@ -19,5 +19,5 @@ __all__ = [
     "Permission",
 ]
 
-__version__ = "0.0.4b"
+__version__ = "0.0.5"
 __version_info__ = tuple(LooseVersion(__version__).version)
