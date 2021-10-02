@@ -1,5 +1,6 @@
 from distutils.version import LooseVersion
 
+from .middleware import BaseMiddleware
 from .permissions import BasePermission, Permission
 from .view_mixins.misc_mixins import JsonifyMixin, StatusCodeMixin
 from .view_mixins.permission_mixin import PermissionMixin
@@ -17,7 +18,8 @@ __all__ = [
     "ResourcesView",
     "BasePermission",
     "Permission",
+    "BaseMiddleware",
 ]
 
-__version__ = "0.0.5"
+__version__ = "0.0.5b"
 __version_info__ = tuple(LooseVersion(__version__).version)
