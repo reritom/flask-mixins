@@ -16,5 +16,5 @@ __all__ = [
     "ResourcesView",
 ]
 
-__version__ = "0.0.4"
+__version__ = "0.0.4b"
 __version_info__ = tuple(LooseVersion(__version__).version)
