@@ -21,14 +21,21 @@ class JsonifyMixin(_Base):
         """
         response = super().dispatch_request(*args, **kwargs)
 
-        if isinstance(response, tuple):
+        if response is None:
+            response = {}
+
+        is_tuple = isinstance(response, tuple)
+        is_dict = isinstance(response, dict)
+        is_list = isinstance(response, list)
+
+        if is_tuple:
             if response[0] is None:
                 response = ({}, response[1])
 
             if isinstance(response[0], dict) or isinstance(response[0], list):
                 return jsonify(response[0]), response[1]
 
-        if isinstance(response, dict) or isinstance(response, list):
+        if is_dict or is_list:
             return jsonify(response)
 
         return response
@@ -41,11 +48,13 @@ class StatusCodeMixin(_Base):
         If the response is None, 204 is returned, and an additional mixin is required
         to handle the None response.
         """
-        status = 201 if method() == "post" else 200
         response = super().dispatch_request(*args, **kwargs)
+        is_tuple = isinstance(response, tuple)
 
-        if not isinstance(response, tuple):
-            # Infer the status code
-            response = (response, status if response is not None else 204)
+        if is_tuple:
+            return response
 
+        # Infer the status code
+        status = 201 if method() == "post" else 200
+        response = (response, status if response is not None else 204)
         return response
