@@ -1,5 +1,6 @@
 from distutils.version import LooseVersion
 
+from .permissions import BasePermission, Permission
 from .view_mixins.misc_mixins import JsonifyMixin, StatusCodeMixin
 from .view_mixins.permission_mixin import PermissionMixin
 from .view_mixins.schema_mixin import SchemaMixin
@@ -14,6 +15,8 @@ __all__ = [
     "ServiceMixin",
     "ResourceView",
     "ResourcesView",
+    "BasePermission",
+    "Permission",
 ]
 
 __version__ = "0.0.4b"
