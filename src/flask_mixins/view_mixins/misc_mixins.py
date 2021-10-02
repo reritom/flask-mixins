@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from flask import jsonify
+from flask import jsonify, make_response
 
 from ._utils import method
 
@@ -25,17 +25,15 @@ class JsonifyMixin(_Base):
             response = {}
 
         is_tuple = isinstance(response, tuple)
-        is_dict = isinstance(response, dict)
-        is_list = isinstance(response, list)
 
         if is_tuple:
             if response[0] is None:
                 response = ({}, response[1])
 
             if isinstance(response[0], dict) or isinstance(response[0], list):
-                return jsonify(response[0]), response[1]
+                return make_response(jsonify(response[0]), response[1])
 
-        if is_dict or is_list:
+        if isinstance(response, dict) or isinstance(response, list):
             return jsonify(response)
 
         return response

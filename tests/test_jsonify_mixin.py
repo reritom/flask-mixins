@@ -1,6 +1,6 @@
 from flask.views import MethodView
 
-from flask_mixins import JsonifyMixin
+from flask_mixins import JsonifyMixin, StatusCodeMixin
 
 
 def test_tuple_with_dict_ok(app):
@@ -14,6 +14,30 @@ def test_tuple_with_dict_ok(app):
     assert response.status_code == 200
     assert response.is_json
     assert response.get_json() == {"hello": "world"}
+
+
+def test_tuple_with_none_ok(app):
+    class Index(JsonifyMixin, MethodView):
+        def get(self):
+            return None
+
+    app.add_url_rule("/", view_func=Index.as_view("index"))
+    client = app.test_client()
+    response = client.get("/")
+    assert response.status_code == 200
+    assert response.is_json
+    assert response.get_json() == {}
+
+
+def test_tuple_with_none_ok_with_status_code(app):
+    class Index(JsonifyMixin, StatusCodeMixin, MethodView):
+        def get(self):
+            return None
+
+    app.add_url_rule("/", view_func=Index.as_view("index"))
+    client = app.test_client()
+    response = client.get("/")
+    assert response.status_code == 204
 
 
 def test_non_tuple_with_dict_ok(app):
