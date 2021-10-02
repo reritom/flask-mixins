@@ -88,12 +88,13 @@ class _ResponseSchemaMixin(_Base):
         return an empty dictionary if the given object is None
         """
         response = super().dispatch_request(*args, **kwargs)
+        tuple_response = isinstance(response, tuple)
 
-        if response is None:
-            return {}
+        if response is None or tuple_response and response[0] is None:
+            return response
 
         schema = self.get_response_schema_instance()
-        tuple_response = isinstance(response, tuple)
+
         obj = response[0] if tuple_response else response
         should_be_many = self._many_response
         should_be_single = not should_be_many
