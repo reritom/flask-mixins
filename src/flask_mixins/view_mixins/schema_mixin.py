@@ -223,7 +223,7 @@ class _RequestSchemaMixin:
         return self.get_request_schema_instance()
 
     def get_validated_data(self) -> dict | Any:
-        data = request.get_json()
+        data = request.get_json(force=True)
         if data is not None:
             return self._get_request_schema_instance().load(data)
         return {}

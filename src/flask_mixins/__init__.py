@@ -21,5 +21,5 @@ __all__ = [
     "BaseMiddleware",
 ]
 
-__version__ = "0.0.5b"
+__version__ = "0.0.5c"
 __version_info__ = tuple(LooseVersion(__version__).version)
