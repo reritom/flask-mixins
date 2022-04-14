@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from flask import request
+from werkzeug import Response
 
 from ._utils import method
 
@@ -90,7 +91,14 @@ class _ResponseSchemaMixin(_Base):
         response = super().dispatch_request(*args, **kwargs)
         tuple_response = isinstance(response, tuple)
 
-        if response is None or tuple_response and response[0] is None:
+        if (
+            isinstance(response, Response)
+            or response is None
+            or (
+                tuple_response
+                and (isinstance(response[0], Response) or response[0] is None)
+            )
+        ):
             return response
 
         schema = self.get_response_schema_instance()
@@ -99,15 +107,15 @@ class _ResponseSchemaMixin(_Base):
         should_be_many = self._many_response
         should_be_single = not should_be_many
 
-        if not isinstance(response, dict):
-            if should_be_single and isinstance(response, list):
+        if not isinstance(obj, dict):
+            if should_be_single and isinstance(obj, list):
                 raise RuntimeError(
                     "View returned list, but expected an individual item"
                 )
-            if should_be_many and not isinstance(response, list):
+            if should_be_many and not isinstance(obj, list):
                 raise RuntimeError("View returned non-list, but expected list")
 
-            obj = schema.dump(response)
+            obj = schema.dump(obj)
 
         return (obj, response[1]) if tuple_response else obj
 
