@@ -1,0 +1,11 @@
+name: Lint on push
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install deps
+        run: pip install flake8
+      - name: Run lint
+        run: flake8 --config setup.cfg
